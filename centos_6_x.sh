@@ -18,9 +18,21 @@ fi
 
 # Install puppet labs repo
 echo "Configuring PuppetLabs repo..."
-repo_path=$(mktemp)
-wget --output-document="${repo_path}" "${REPO_URL}" 2>/dev/null
-rpm -i "${repo_path}" >/dev/null
+repo_path=$(mktemp --suffix=.rpm)
+
+# Use either wget or curl to fetch repo rpm,
+# or just use rpm if neither can be found
+if which wget >/dev/null 2>&1; then
+    wget --output-document="${repo_path}" "${REPO_URL}" 2>/dev/null
+    rpm -i "${repo_path}" >/dev/null
+elif which curl >/dev/null 2>&1; then
+    curl -o "${repo_path}" "${REPO_URL}" 2>/dev/null
+    rpm -i "${repo_path}"
+else
+    rpm -i "${REPO_URL}"
+fi
+
+rm -f "${repo_path}"
 
 # Install Puppet...
 echo "Installing puppet"
